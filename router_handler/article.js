@@ -258,30 +258,41 @@ exports.likeStatus = (req, res) => {
     }
   })
 }
-
+// 文章评论
 exports.commentArticle = (req, res) => {
   const sql = `insert into comment set ?`
-  const sql2 = `select avatar,nickname from user where id = ?`
-
+  const sql2 = `insert into message set ?`
+  var flag = false
+  const time = new Date()
+  // 评论信息
+  const commentInfo = {
+    article_id: parseInt(req.body.article_id),
+    from_id: parseInt(req.body.from_id),
+    time: time,
+    content: req.body.content
+  }
+  // console.log()
   new Promise((resolve, reject) => {
-    db.query(sql2, parseInt(req.body.from_id), (err, results) => {
+    // 添加评论
+    db.query(sql, commentInfo, (err, result) => {
       if (err) return reject(err)
-      // console.log(results)
-      resolve(results)
+      if (result.affectedRows === 1) flag = true
+      resolve(result)
     })
   })
-    .then((data) => {
-      // console.log(data[0].avatar)
-      const commentInfo = {
-        ...req.body,
-        article_id: parseInt(req.body.article_id),
-        from_id: parseInt(req.body.from_id),
-        time: new Date()
+    .then((result) => {
+      // 消息信息
+      const messageInfo = {
+        type: 1,
+        time: time,
+        message_id: result.insertId,
+        status: 0,
+        to_id: parseInt(req.body.to_id)
       }
-      // 添加评论
-      db.query(sql, commentInfo, (err, result) => {
+      // 新增消息
+      db.query(sql2, messageInfo, (err, results) => {
         if (err) return res.cc(err)
-        if (result.affectedRows === 1) {
+        if (flag) {
           res.send({
             status: 0,
             message: '评论成功！'
@@ -300,6 +311,7 @@ exports.commentArticle = (req, res) => {
 
   // console.log(commentInfo)
 }
+// 获取文章评论
 exports.getArticleComment = (req, res) => {
   // const sql = `select * from comment where article_id = ?`
   const sql = `SELECT c.article_id, c.content,u.avatar,u.nickname,u.username, c.from_id,c.id comment_id,c.time,r.content reply,r.time reply_time FROM comment c LEFT JOIN reply r ON c.id = r.comment_id and c.article_id = ? LEFT JOIN user u ON c.from_id = u.id `
@@ -318,42 +330,82 @@ exports.deleteComment = (req, res) => {
     const querySql = `select * from article where id = ? and author_id =?`
     db.query(querySql, [parseInt(req.body.article_id), parseInt(req.body.visitor_id)], (err, result) => {
       if (err) return reject(err)
-      if (result.length === 0) return reject('你没有权限删除此文章!')
+      if (result.length === 0) return reject('你没有权限删除此评论!')
       resolve(result)
     })
   })
     .then(() => {
-      const sql = `DELETE c,r FROM comment c LEFT JOIN reply r ON r.comment_id = c.id WHERE c.id = ?`
-      db.query(sql, parseInt(req.body.comment_id), (err, result) => {
+      const deleteSql = `delete m from reply r left join message m on (r.id = m.message_id and m.type=2) where r.comment_id = ?`
+      // var flag = false
+      const sql = `DELETE c,r,m FROM comment c LEFT JOIN reply r ON r.comment_id = c.id LEFT JOIN message m ON (m.message_id = c.id and m.type=1) WHERE c.id = ?`
+      db.query(deleteSql, parseInt(req.body.comment_id), (err, result) => {
         if (err) return res.cc(err)
-        // if (result.affectedRows === 0) res.cc('删除评论失败!')
-        res.send({
-          status: 0,
-          message: '删除评论成功!'
-        })
+        else {
+          db.query(sql, parseInt(req.body.comment_id), (err, result) => {
+            if (err) return res.cc(err)
+            // if (result.affectedRows === 0) res.cc('删除评论失败!')
+            res.send({
+              status: 0,
+              message: '删除评论成功!'
+            })
+          })
+        }
       })
     })
     .catch((err) => {
       res.cc(err)
     })
 }
+// 回复文章评论
 exports.replyToComment = (req, res) => {
-  const sql = `insert into reply set ?`
-
-  const replyInfo = {
-    ...req.body,
-    time: new Date(),
-    comment_id: parseInt(req.body.comment_id),
-    article_id: parseInt(req.body.article_id)
-  }
-  // console.log(replyInfo)
-  db.query(sql, replyInfo, (err, result) => {
-    if (err) return res.cc(err)
-    res.send({
-      status: 0,
-      message: '回复评论成功！'
+  var flag = false
+  const time = new Date()
+  new Promise((resolve, reject) => {
+    const sql = `insert into reply set ?`
+    // console.log(1)
+    const replyInfo = {
+      // ...req.body,
+      time: time,
+      comment_id: parseInt(req.body.comment_id),
+      article_id: parseInt(req.body.article_id),
+      content: req.body.content
+    }
+    console.log(replyInfo)
+    db.query(sql, replyInfo, (err, result) => {
+      if (err) return reject(err)
+      flag = true
+      resolve(result)
     })
   })
+    .then((result) => {
+      // console.log(result.insertId)
+      const sql2 = `insert into message set ?`
+      // 消息信息
+      const messageInfo = {
+        type: 2,
+        time: time,
+        message_id: result.insertId,
+        status: 0,
+        to_id: parseInt(req.body.to_id)
+      }
+      db.query(sql2, messageInfo, (err, result) => {
+        if (err) return res.cc(err)
+        if (flag) {
+          res.send({
+            status: 0,
+            message: '回复评论成功！'
+          })
+        } else {
+          res.send({
+            status: 1,
+            message: '回复评论失败！'
+          })
+        }
+      })
+    })
+    .catch((err) => {
+      res.cc(err)
+    })
 }
 // 上传文章图片的处理函数
 exports.uploadImg = (req, res) => {
