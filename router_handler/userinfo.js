@@ -52,7 +52,7 @@ exports.updateUserInfo = (req, res) => {
     var userInfo = {
       nickname: req.body.nickname,
       // 文章封面的存放路径
-      avatar: 'http://127.0.0.1:3007/avatar/' + req.file.filename
+      avatar: 'http://182.61.53.203:3007/avatar/' + req.file.filename
     }
     // console.log(req.body.oldavatar)
     fs.unlink(path.join(__dirname, '../avatar/', req.body.oldavatar), (err, results) => {

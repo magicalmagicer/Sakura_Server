@@ -18,7 +18,8 @@ exports.addArticle = (req, res) => {
     author_id: Number(req.body.author_id),
 
     // 文章封面的存放路径
-    pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
+    // pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
+    pic_url: 'http://182.61.53.203:3007/uploads/' + req.file.filename,
     // 文章的发布时间
     time: new Date(),
     like_count: 0
@@ -46,7 +47,7 @@ exports.editArticle = (req, res) => {
       category: req.body.category,
       content: req.body.content,
       // 文章封面的存放路径
-      pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
+      pic_url: 'http://182.61.53.203/uploads/' + req.file.filename,
       // 文章的发布时间
       time: new Date()
     }
@@ -82,13 +83,15 @@ exports.editArticle = (req, res) => {
 
 // 删除文章处理函数
 exports.deleteArticle = (req, res) => {
-  const sql = `delete a,l,r,c from article a
+  const sql = `delete a,l,r,c,m from article a
     left join likes l
     on a.id = l.article_id
     left join reply r
     on r.article_id = a.id
     left join comment c
     on c.article_id = a.id
+    left join message m
+    on (m.time = c.time or m.time = r.time)
     where a.id = ?`
   db.query(sql, parseInt(req.query.id), (err, results) => {
     if (err) return res.cc(err)
@@ -203,6 +206,7 @@ exports.searchArticle = (req, res) => {
 exports.likeArticle = (req, res) => {
   const sql = `update article set like_count = like_count + 1 where id = ?`
   const article_liker_sql = `insert likes(article_id, liker_id, time) values(?, ?, ?)`
+  // console.log(req.query)
   const nowTime = new Date()
   // console.log(parseInt(req.query.id), parseInt(req.query.liker_id), nowTime)
   new Promise((resolve, reject) => {
@@ -213,7 +217,9 @@ exports.likeArticle = (req, res) => {
   })
     .then((data) => {
       db.query(article_liker_sql, [parseInt(req.query.id), parseInt(req.query.liker_id), nowTime], (err, results) => {
+        // console.log(1)
         if (err) return res.cc(err)
+        // console.log(2)
         res.send({
           status: 0,
           message: '点赞成功！'
@@ -370,7 +376,7 @@ exports.replyToComment = (req, res) => {
       article_id: parseInt(req.body.article_id),
       content: req.body.content
     }
-    console.log(replyInfo)
+    // console.log(replyInfo)
     db.query(sql, replyInfo, (err, result) => {
       if (err) return reject(err)
       flag = true
@@ -416,7 +422,111 @@ exports.uploadImg = (req, res) => {
     res.send({
       status: 0,
       message: '上传图片成功！',
-      data: 'http://127.0.0.1:3007/imgupload/' + filename
+      data: 'http://182.61.53.203:3007/imgupload/' + filename
+    })
+  })
+}
+// 获取消息
+exports.getMessage = (req, res) => {
+  if (req.query.type == '1') {
+    // 获取评论相关的消息列表
+    var sql = `select m.*,c.content,u.username,u.nickname,a.title,a.id article_id from message m left join comment c on m.message_id = c.id left join user u on c.from_id = u.id left join article a on a.id = c.article_id where m.type = ? and m.to_id = ? order by m.id`
+    var count_sql = `select count(*) from message where to_id = ? and status = 0 and type = ?`
+    new Promise((resolve, reject) => {
+      db.query(sql, [parseInt(req.query.type), parseInt(req.query.id)], (err, results) => {
+        if (err) return reject(err)
+        // if (results.affectedRows === 0) return res.cc('发布新文章失败！')
+        resolve(results)
+      })
+    })
+      .then((data) => {
+        db.query(count_sql, [parseInt(req.query.id), parseInt(req.query.type)], (err, results) => {
+          if (err) return res.cc(err)
+          res.send({
+            status: 0,
+            message: '获取评论消息列表成功！',
+            count: results[0]['count(*)'],
+            data: data
+          })
+        })
+      })
+      .catch((err) => {
+        res.cc(err)
+      })
+  } else {
+    // 获取回复相关的消息列表
+    var sql = `select m.*,r.content,a.title,a.id article_id from reply r left join message m on m.message_id = r.id left join article a on a.id = r.article_id where m.type = ? and m.to_id = ? order by m.id`
+    var count_sql = `select count(*) from message where to_id = ? and status = 0 and type = ?`
+    new Promise((resolve, reject) => {
+      db.query(sql, [parseInt(req.query.type), parseInt(req.query.id)], (err, results) => {
+        if (err) return reject(err)
+        // if (results.affectedRows === 0) return res.cc('发布新文章失败！')
+        resolve(results)
+      })
+    })
+      .then((data) => {
+        db.query(count_sql, [parseInt(req.query.id), parseInt(req.query.type)], (err, results) => {
+          if (err) return res.cc(err)
+          res.send({
+            status: 0,
+            message: '获取回复评论消息列表成功！',
+            count: results[0]['count(*)'],
+            data: data
+          })
+        })
+      })
+      .catch((err) => {
+        res.cc(err)
+      })
+  }
+}
+exports.changeMessageStatus = (req, res) => {
+  const sql = `update message set status = 1 where id = ?`
+  db.query(sql, req.query.id, (err, result) => {
+    if (err) return res.cc(err)
+    // console.log(result)
+    if (result.affectedRows == 1) {
+      res.send({
+        status: 0,
+        message: '修改消息状态成功！'
+      })
+    }
+  })
+}
+exports.getLikeMessage = (req, res) => {
+  var sql = `select a.id article_id, a.title article_title,u.username liker_name,u.nickname liker_nickname,l.time  from likes l left join article a on l.article_id = a.id  left join user u on u.id = l.liker_id  where a.author_id = ? order by l.id`
+  var count_sql = `select count(*) from likes l left join article a on (l.article_id = a.id and l.status = 0) left join user u on u.id = l.liker_id  where a.author_id = ? order by l.id`
+
+  new Promise((resolve, reject) => {
+    db.query(sql, req.query.id, (err, results) => {
+      if (err) return reject(err)
+      // if (results.affectedRows === 0) return res.cc('发布新文章失败！')
+      resolve(results)
+    })
+  })
+    .then((data) => {
+      db.query(count_sql, [parseInt(req.query.id), parseInt(req.query.type)], (err, results) => {
+        if (err) return res.cc(err)
+        res.send({
+          status: 0,
+          message: '获取点赞消息成功！',
+          count: results[0]['count(*)'],
+          data: data
+        })
+      })
+    })
+    .catch((err) => {
+      res.cc(err)
+    })
+}
+exports.changeLikeStatus = (req, res) => {
+  var sql = `update article a left join likes l  on l.article_id = a.id set l.status = 1 where a.author_id = ?`
+  // console.log(sql)
+  db.query(sql, req.query.id, (err, result) => {
+    if (err) return res.cc(err)
+    res.send({
+      status: 0,
+      message: '更新点赞状态成功！'
     })
   })
 }

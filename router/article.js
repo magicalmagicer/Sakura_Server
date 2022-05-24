@@ -69,6 +69,14 @@ router.post('/comment', article_handler.commentArticle)
 router.post('/replycomment', article_handler.replyToComment)
 //获取文章评论
 router.get('/getcomment', article_handler.getArticleComment)
+//获取我的消息
+router.get('/getmessage', article_handler.getMessage)
+//修改消息状态
+router.get('/messagestatus', article_handler.changeMessageStatus)
+//修改消息状态
+router.get('/changelike', article_handler.changeLikeStatus)
+// 文章点赞消息
+router.get('/getlike', article_handler.getLikeMessage)
 //删除文章评论
 router.post('/deletecomment', article_handler.deleteComment)
 module.exports = router
