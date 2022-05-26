@@ -48,22 +48,30 @@ exports.getUserPower = (req, res) => {
 exports.updateUserInfo = (req, res) => {
   // console.log(req.file)
   if (req.file) {
+    // console.log(1)
     // 处理文章的信息对象
     var userInfo = {
       nickname: req.body.nickname,
       // 文章封面的存放路径
       avatar: 'http://182.61.53.203:3007/avatar/' + req.file.filename
     }
-    // console.log(req.body.oldavatar)
-    fs.unlink(path.join(__dirname, '../avatar/', req.body.oldavatar), (err, results) => {
-      if (err) res.cc(err)
+    if (req.body.oldavatar) {
+      // console.log(11)
+      fs.unlink(path.join(__dirname, '../avatar/', req.body.oldavatar), (err, results) => {
+        if (err) res.cc(err)
+        const sql = `update user set ? where username ='${req.body.username}'`
+        db.query(sql, userInfo, (err, results) => {
+          if (err) return res.cc(err)
+          res.cc('修改用户信息成功！', 0)
+        })
+      })
+    } else {
       const sql = `update user set ? where username ='${req.body.username}'`
       db.query(sql, userInfo, (err, results) => {
         if (err) return res.cc(err)
-        if (results.affectedRows !== 1) return res.cc('修改用户信息失败！')
         res.cc('修改用户信息成功！', 0)
       })
-    })
+    }
   } else {
     var userInfo = {
       nickname: req.body.nickname
