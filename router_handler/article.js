@@ -320,7 +320,8 @@ exports.commentArticle = (req, res) => {
 // 获取文章评论
 exports.getArticleComment = (req, res) => {
   // const sql = `select * from comment where article_id = ?`
-  const sql = `SELECT c.article_id, c.content,u.avatar,u.nickname,u.username, c.from_id,c.id comment_id,c.time,r.content reply,r.time reply_time FROM comment c LEFT JOIN reply r ON c.id = r.comment_id and c.article_id = ? LEFT JOIN user u ON c.from_id = u.id `
+  // const sql = `SELECT c.article_id, c.content,u.avatar,u.nickname,u.username, c.from_id,c.id comment_id,c.time,r.content reply,r.time reply_time FROM comment c LEFT JOIN reply r ON c.id = r.comment_id and c.article_id = ? LEFT JOIN user u ON c.from_id = u.id `
+  const sql = `SELECT c.article_id, c.content,u.avatar,u.nickname,u.username, c.from_id,c.id comment_id,c.time,r.content reply,r.time reply_time FROM comment c LEFT JOIN reply r ON c.id = r.comment_id LEFT JOIN user u ON c.from_id = u.id WHERE c.article_id = ?`
   db.query(sql, parseInt(req.query.article_id), (err, result) => {
     if (err) return res.cc('获取文章评论失败！')
     res.send({
