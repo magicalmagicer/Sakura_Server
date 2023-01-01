@@ -9,9 +9,14 @@ const password = joi
   .pattern(/^[\S]{5,15}$/)
   .required()
 
+const ip = joi
+  .string()
+  .pattern(/([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9]{1,4}(:[a-f0-9]{1,4}){7})/)
+  .required()
 // 定义 id, nickname, email 的验证规则
 const id = joi.number().integer().min(1).required()
 const nickname = joi.string().required()
+const city = joi.string().allow('').required()
 const user_email = joi.string().email().required()
 
 // 定义验证 avatar 头像的验证规则

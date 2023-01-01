@@ -53,7 +53,7 @@ exports.updateUserInfo = (req, res) => {
     var userInfo = {
       nickname: req.body.nickname,
       // 文章封面的存放路径
-      avatar: 'http://182.61.53.203:3007/avatar/' + req.file.filename
+      avatar: 'http://120.46.168.254:3007/avatar/' + req.file.filename
     }
     if (req.body.oldavatar) {
       // console.log(11)

@@ -9,7 +9,6 @@ const path = require('path')
 const storage = multer.diskStorage({
   destination(req, res, cb) {
     cb(null, path.join(__dirname, '../avatar'))
-    // console.log(req, res)
   },
   filename(req, file, cb) {
     const filenameArr = file.originalname.split('.')
@@ -36,7 +35,5 @@ router.get('/power', userinfo_handler.getUserPower)
 router.post('/userinfo', uploads.single('file'), userinfo_handler.updateUserInfo)
 // 更新密码的路由
 router.post('/updatepwd', expressJoi(update_password_schema), userinfo_handler.updatePassword)
-// 更换头像的路由
-// router.post('/update/avatar', expressJoi(update_avatar_schema), userinfo_handler.updateAvatar)
 
 module.exports = router

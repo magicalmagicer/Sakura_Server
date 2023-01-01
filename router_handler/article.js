@@ -19,7 +19,7 @@ exports.addArticle = (req, res) => {
 
     // 文章封面的存放路径
     // pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
-    pic_url: 'http://182.61.53.203:3007/uploads/' + req.file.filename,
+    pic_url: 'http://120.46.168.254:3007/uploads/' + req.file.filename,
     // 文章的发布时间
     time: new Date(),
     like_count: 0
@@ -47,7 +47,7 @@ exports.editArticle = (req, res) => {
       category: req.body.category,
       content: req.body.content,
       // 文章封面的存放路径
-      pic_url: 'http://182.61.53.203/uploads/' + req.file.filename,
+      pic_url: 'http://120.46.168.254/uploads/' + req.file.filename,
       // 文章的发布时间
       time: new Date()
     }
@@ -105,37 +105,29 @@ exports.deleteArticle = (req, res) => {
 
 // 获取文章列表的处理函数（完成）
 exports.getArticle = (req, res) => {
-  // console.log(req.query)
   if (req.query.id) {
     //根据id查询文章列表数据
-    var sql = `select * from article where author_id = ${parseInt(req.query.id)} order by id desc limit ?, ? `
+    var sql = `select a.*,u.nickname from article a left join user u on u.id = a.author_id where author_id = ${parseInt(req.query.id)} order by id desc limit ?, ? `
     var count_sql = `select count(*) from article where author_id = ${parseInt(req.query.id)}`
   } else if (req.query.key) {
     //根据关键字标签查询文章列表数据
-    // console.log(2)
-    // console.log(typeof req.query.key)
-    var sql = `select * from article where category = '${req.query.key}' order by id desc limit ?, ? `
-    // console.log(sql)
+    var sql = `select a.*,u.nickname from article a left join user u on u.id = a.author_id where category = '${req.query.key}' order by id desc limit ?, ? `
     var count_sql = `select count(*) from article where category = '${req.query.key}'`
   } else {
     //定义查询全部文章列表数据的 SQL 语句
-    var sql = `select * from article order by id desc limit ?, ?`
+    var sql = `select a.*,u.nickname from article a left join user u on u.id = a.author_id order by a.id desc limit ?, ?`
     var count_sql = `select count(*) from article`
   }
   const start_index = req.query.curPage * req.query.pageSize - req.query.pageSize
-  // const params =
   new Promise((resolve, reject) => {
     db.query(sql, [start_index, parseInt(req.query.pageSize)], (err, results) => {
       if (err) return reject(err)
-      // console.log(1)
-      // if (results.affectedRows === 0) return res.cc('发布新文章失败！')
       resolve(results)
     })
   })
     .then((data) => {
       db.query(count_sql, (err, results) => {
         if (err) return res.cc(err)
-        // console.log(2)
         res.send({
           status: 0,
           message: '获取文章列表数据成功！',
@@ -145,23 +137,16 @@ exports.getArticle = (req, res) => {
       })
     })
     .catch((err) => {
-      // console.log(3)
       res.cc(err)
     })
 }
 
 // 获取文章详情的处理函数
 exports.getArticleDetail = (req, res) => {
-  // console.log(req.query)
   //定义查询文章列表数据的 SQL 语句
   const sql = `select a.*,u.username,u.nickname from article a,user u  where a.id = ? and  a.author_id  = u.id`
-  // const count_sql = `select count(*) from article`
-  // console.log(req.query.id)
   db.query(sql, parseInt(req.query.id), (err, results) => {
     if (err) return res.cc(err)
-    // console.log(affectedRows)
-    // console.log(results.length)
-    // console.log(results)
     if (results.length !== 1) return res.cc('获取文章详情失败！')
     res.send({
       status: 0,
@@ -173,16 +158,14 @@ exports.getArticleDetail = (req, res) => {
 
 // 搜索文章列表的处理函数（完成）
 exports.searchArticle = (req, res) => {
-  //定义查询文章列表数据的 SQL 语句
-  const sql = `SELECT * FROM article where title like ? order by id desc limit ? , ?`
-  const count_sql = `select count(*) from article where title like ?`
   const start_index = req.query.curPage * req.query.pageSize - req.query.pageSize
   const queryStr = '%' + req.query.key + '%'
-  // console.log(req.query, queryStr)
+  //定义查询文章列表数据的 SQL 语句
+  const sql = `SELECT * FROM article where (title like '${queryStr}' or content like '${queryStr}') order by id desc limit ? , ?`
+  const count_sql = `select count(*) from article where (title like '${queryStr}' or content like '${queryStr}')`
   new Promise((resolve, reject) => {
-    db.query(sql, [queryStr, start_index, parseInt(req.query.pageSize)], (err, results) => {
+    db.query(sql, [start_index, parseInt(req.query.pageSize)], (err, results) => {
       if (err) return reject(err)
-      // if (results.affectedRows === 0) return res.cc('发布新文章失败！')
       resolve(results)
     })
   })
@@ -423,7 +406,7 @@ exports.uploadImg = (req, res) => {
     res.send({
       status: 0,
       message: '上传图片成功！',
-      data: 'http://182.61.53.203:3007/imgupload/' + filename
+      data: 'http://120.46.168.254:3007/imgupload/' + filename
     })
   })
 }

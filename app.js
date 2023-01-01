@@ -36,6 +36,9 @@ const config = require('./config')
 
 app.use(expressJWT({ secret: config.jwtSecretKey }).unless({ path: [/^\/api/, /^\/uploads/, /^\/avatar/, /^\/imgupload/] }))
 
+// 管理员模块
+const adminRouter = require('./router/admin')
+app.use('/admin', adminRouter)
 // 导入并使用用户路由模块
 const userRouter = require('./router/user')
 app.use('/api/users', userRouter)
