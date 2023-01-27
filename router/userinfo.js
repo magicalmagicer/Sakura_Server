@@ -35,5 +35,7 @@ router.get('/power', userinfo_handler.getUserPower)
 router.post('/userinfo', uploads.single('file'), userinfo_handler.updateUserInfo)
 // 更新密码的路由
 router.post('/updatepwd', expressJoi(update_password_schema), userinfo_handler.updatePassword)
+// 获取用户活跃度的路由
+router.get('/activity', userinfo_handler.getActivity)
 
 module.exports = router

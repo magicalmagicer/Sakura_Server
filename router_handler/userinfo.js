@@ -128,17 +128,20 @@ exports.updatePassword = (req, res) => {
   })
 }
 
-// 更新用户头像的处理函数
-// exports.updateAvatar = (req, res) => {
-//   // 1. 定义更新头像的 SQL 语句
-//   const sql = `update ev_users set user_pic=? where id=?`
-//   // 2. 调用 db.query() 执行 SQL 语句
-//   db.query(sql, [req.body.avatar, req.user.id], (err, results) => {
-//     // 执行 SQL 语句失败
-//     if (err) return res.cc(err)
-//     // 影响的行数是否等于 1
-//     if (results.affectedRows !== 1) return res.cc('更换头像失败！')
-//     // 成功
-//     res.cc('更换头像成功！', 0)
-//   })
-// }
+// 获取用户活跃度的处理函数
+exports.getActivity = (req, res) => {
+  let date = req.query.date
+  // date = '2022-12'
+  // 1. 定义更新头像的 SQL 语句
+  const sql = `select a.id,a.times,u.nickname from (select *,count(time) times from login where date_format(time, "%Y-%m")="${date}"  group by user_id order by times desc) a left join user u on u.id = a.user_id limit 5;`
+  // 2. 调用 db.query() 执行 SQL 语句
+  db.query(sql, (err, results) => {
+    // 执行 SQL 语句失败
+    if (err) return res.cc(err)
+    // 成功
+    res.send({
+      status: 0,
+      data: results
+    })
+  })
+}
