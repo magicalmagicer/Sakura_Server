@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 // 导入全局的配置文件
 const config = require('../config')
 const axios = require('axios')
+const nodemailer = require('nodemailer')
 
 // 注册新用户的处理函数
 exports.regUser = (req, res) => {
@@ -14,29 +15,37 @@ exports.regUser = (req, res) => {
   const userinfo = req.body
 
   // 定义 SQL 语句，查询用户名是否被占用
-  const sqlStr = 'select * from user where username=?'
-  db.query(sqlStr, userinfo.username, (err, results) => {
+  const sqlStr = 'select * from user where username=? or email=?'
+  db.query(sqlStr, [userinfo.username, userinfo.email], (err, results) => {
     // 执行 SQL 语句失败
     if (err) {
-      // return res.send({ status: 1, message: err.message })
       return res.cc(err)
     }
     // 判断用户名是否被占用
     if (results.length > 0) {
-      // return res.send({ status: 1, message: '用户名被占用，请更换其他用户名！' })
-      return res.cc('用户名被占用，请更换其他用户名！')
+      return res.cc('用户名或邮箱被占用，请更换！')
     }
-    // 调用 bcrypt.hashSync() 对密码进行加密
-    userinfo.password = bcrypt.hashSync(userinfo.password, 10)
-    // 定义插入新用户的 SQL 语句
-    const sql = 'insert into user set ?'
+
+    // 验证码核验
+    const codeSql = 'select * from email where email=?'
     // 调用 db.query() 执行 SQL 语句
-    db.query(sql, { username: userinfo.username, password: userinfo.password, nickname: userinfo.nickname }, (err, results) => {
+    db.query(codeSql, userinfo.email, (err, results) => {
       // 判断 SQL 语句是否执行成功
       if (err) return res.cc(err)
-      if (results.affectedRows !== 1) return res.cc('注册用户失败，请稍后再试！')
-      // 注册用户成功
-      res.cc('注册成功！', 0)
+      console.log(results.code, results.expire, new Date(results.expire).getTime(), new Date(new Date().now()).getTime())
+      if (userinfo.code !== results.code || (new Date(results.expire).getTime() / 1000) < (new Date(new Date().now()).getTime() / 1000)) return res.cc('验证码错误或失效！')
+      // 调用 bcrypt.hashSync() 对密码进行加密
+      userinfo.password = bcrypt.hashSync(userinfo.password, 10)
+      // 定义插入新用户的 SQL 语句
+      const sql = 'insert into user set ?'
+      // 调用 db.query() 执行 SQL 语句
+      db.query(sql, { username: userinfo.username, password: userinfo.password, nickname: userinfo.nickname, email: userinfo.email }, (err, results) => {
+        // 判断 SQL 语句是否执行成功
+        if (err) return res.cc(err)
+        if (results.affectedRows !== 1) return res.cc('注册用户失败，请稍后再试！')
+        // 注册用户成功
+        res.cc('注册成功！', 0)
+      })
     })
   })
 }
@@ -70,7 +79,6 @@ exports.login = (req, res) => {
         // TODO：通过compareSync判断密码是否正确
         const compareResult = bcrypt.compareSync(userinfo.password, results[0].password)
         if (!compareResult) return res.cc('密码错误！')
-        // if (userinfo.password !== results[0].password) return res.cc('登录失败！')
 
         // TODO：在服务器端生成 Token 的字符串
         const user = { ...results[0], password: '', avatar: '' }
@@ -105,5 +113,61 @@ exports.login = (req, res) => {
       .catch((err) => {
         console.log('Error: ', err.message)
       })
+  })
+}
+
+// 获取验证码
+exports.getCode = (req, res) => {
+  // 接收表单的数据
+  const email = req.body.email
+  // 定义 SQL 语句
+  const sql = `select * from user where email=?`
+  // 执行 SQL 语句，根据用户名查询用户的信息
+  db.query(sql, email, (err, results) => {
+    if (err) {
+      return res.cc(err)
+    }
+    // 判断用户名是否被占用
+    if (results.length > 0) {
+      return res.cc('邮箱已被注册，请更换其他邮箱！')
+    }
+    // 邮箱未绑定，验证通过
+    let code = Math.floor(Math.random() * 900000 + 100000)
+    // 建立一个smtp连接
+    let transporter = nodemailer.createTransport({
+      host: 'smtp.qq.com',
+      secureConnection: true, // 这个属性为true 可以使邮件更安全
+      port: 465, // 端口默认465
+      auth: {
+        user: "3263047330@qq.com", // 邮箱账号
+        pass: "iytbzdvitbpsdbcb" // 可理解为是密码，从邮箱上获取的 
+      }
+    })
+    // 配置相关参数
+    let options = {
+      from: "3263047330@qq.com",
+      to: email + ",3263047330@qq.com", // 发到哪里去  加上自己的邮箱可以不被qq 拦截
+      subject: "博客网站账号注册验证", // 邮件标题
+      html: `<div style="width:600px;margin:30px auto"><h1 style="text-align:center;">邮箱验证码</h1><p style="font-size:20px">请填写以下验证码完成邮箱验证：</p><strong style="font-size:20px;display:block;text-align:center;color:red">${code}</strong><p>验证码十分钟内有效，请及时输入</p><i style="color:#00bfff">此邮件为系统自动发送，请勿回复！若您没有进行注册请忽略。</i><p style="text-align:right">--邮箱助手</p></div>`
+    }
+    transporter.sendMail(options, (err, msg) => {
+      if (err) {
+        console.log('发送失败', err)
+        res.cc('验证码发送失败！')
+      } else {
+        const sql = `insert into email (email,code,expire) values (${email},${code},${new Date(Date.now() + 10 * 60 * 1000)}) on duplicate key update code=${code},expire=${new Date(Date.now() + 10 * 60 * 1000)};`
+        // 调用 db.query() 执行 SQL 语句
+        db.query(sql, (err, results) => {
+          // 判断 SQL 语句是否执行成功
+          if (err) return res.cc('验证码发送失败！')
+          if (results.affectedRows === 0) return res.cc('验证码发送失败，请稍后再试！')
+          console.log('发送成功！ ', code)
+          res.cc('验证码发送成功！', 0)
+        })
+      }
+      transporter.close()
+    })
+
+
   })
 }

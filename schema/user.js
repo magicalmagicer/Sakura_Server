@@ -36,12 +36,10 @@ exports.reg_register_schema = {
     nickname
   }
 }
-// 验证规则对象 - 更新用户基本信息
-exports.update_userinfo_schema = {
+// 邮箱对象验证
+exports.email_schema = {
   // 需要对 req.body 里面的数据进行验证
   body: {
-    id,
-    nickname,
     email: user_email
   }
 }
