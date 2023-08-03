@@ -69,7 +69,7 @@ exports.login = (req, res) => {
         }
         // TODO：通过compareSync判断密码是否正确
         const compareResult = bcrypt.compareSync(userinfo.password, results[0].password)
-        if (!compareResult) return res.cc('登录失败！')
+        if (!compareResult) return res.cc('密码错误！')
         // if (userinfo.password !== results[0].password) return res.cc('登录失败！')
 
         // TODO：在服务器端生成 Token 的字符串
