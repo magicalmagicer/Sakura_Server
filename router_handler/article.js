@@ -19,7 +19,7 @@ exports.addArticle = (req, res) => {
 
     // 文章封面的存放路径
     // pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
-    pic_url: 'http://120.46.168.254:3007/uploads/' + req.file.filename,
+    pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
     // 文章的发布时间
     time: new Date(),
     like_count: 0
@@ -47,7 +47,7 @@ exports.editArticle = (req, res) => {
       category: req.body.category,
       content: req.body.content,
       // 文章封面的存放路径
-      pic_url: 'http://120.46.168.254/uploads/' + req.file.filename,
+      pic_url: 'http://127.0.0.1/uploads/' + req.file.filename,
       // 文章的发布时间
       time: new Date()
     }
@@ -406,7 +406,7 @@ exports.uploadImg = (req, res) => {
     res.send({
       status: 0,
       message: '上传图片成功！',
-      data: 'http://120.46.168.254:3007/imgupload/' + filename
+      data: 'http://127.0.0.1:3007/imgupload/' + filename
     })
   })
 }

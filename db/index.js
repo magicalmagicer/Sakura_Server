@@ -1,11 +1,11 @@
 const mysql = require('mysql')
 
 const db = mysql.createPool({
-  host: '127.0.0.1',
+  host: '121.5.233.175',
   user: 'root',
-  password: 'newpassword',
+  password: 'CasualKeyL.',
   database: 'bili_blog',
-  timezone: '08:00'
-})
+  timezone: '08:00',
+});
 
 module.exports = db

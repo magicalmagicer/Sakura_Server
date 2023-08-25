@@ -37,5 +37,7 @@ router.post('/userinfo', uploads.single('file'), userinfo_handler.updateUserInfo
 router.post('/updatepwd', expressJoi(update_password_schema), userinfo_handler.updatePassword)
 // 获取用户活跃度的路由
 router.get('/activity', userinfo_handler.getActivity)
+// 用户邮箱换绑路由
+router.post('/updateemail', userinfo_handler.updateEmail);
 
 module.exports = router

@@ -33,25 +33,29 @@ exports.reg_register_schema = {
   body: {
     username,
     password,
-    nickname
-  }
-}
+    nickname,
+    email: user_email,
+    code: joi.number(),
+  },
+};
 // 邮箱对象验证
 exports.email_schema = {
   // 需要对 req.body 里面的数据进行验证
   body: {
-    email: user_email
-  }
-}
+    email: user_email,
+    type: joi.number(),
+  },
+};
 
 // 验证规则对象 - 更新密码
 exports.update_password_schema = {
   body: {
     id,
-    oldPwd: password,
-    newPwd: joi.not(joi.ref('oldPwd')).concat(password)
-  }
-}
+    code: joi.string(),
+    email: joi.string(),
+    newPwd: joi.not(joi.ref('oldPwd')).concat(password),
+  },
+};
 
 // 验证规则对象 - 更新头像
 exports.update_avatar_schema = {
