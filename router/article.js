@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 const storage2 = multer.diskStorage({
   destination(req, res, cb) {
     cb(null, path.join(__dirname, '../imgupload'))
-    // console.log(req, res)
+    console.log(req, res)
   },
   fieldname(req, file, cb) {
     const filenameArr = file.originalname.split('.')
