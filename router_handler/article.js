@@ -19,14 +19,14 @@ exports.addArticle = (req, res) => {
 
     // 文章封面的存放路径
     // pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
-    pic_url: 'http://127.0.0.1:3007/uploads/' + req.file.filename,
+    pic_url: 'http://43.138.252.149:3007/uploads/' + req.file.filename,
     // 文章的发布时间
     time: new Date(),
-    like_count: 0
+    like_count: 0,
     // category_id: req.cagegoryId
     // // 文章作者的Id
     // author_id: req.user.id
-  }
+  };
   // console.log(articleInfo)
   // console.log(articleInfo)
   const sql = `insert into article set ?`
@@ -47,10 +47,10 @@ exports.editArticle = (req, res) => {
       category: req.body.category,
       content: req.body.content,
       // 文章封面的存放路径
-      pic_url: 'http://127.0.0.1/uploads/' + req.file.filename,
+      pic_url: 'http://43.138.252.149/uploads/' + req.file.filename,
       // 文章的发布时间
-      time: new Date()
-    }
+      time: new Date(),
+    };
     fs.unlink(path.join(__dirname, '../uploads/', req.body.oldUrl), (err, data) => {
       if (err) {
         res.cc(err)
@@ -406,8 +406,8 @@ exports.uploadImg = (req, res) => {
     res.send({
       status: 0,
       message: '上传图片成功！',
-      data: 'http://127.0.0.1:3007/imgupload/' + filename
-    })
+      data: 'http://43.138.252.149:3007/imgupload/' + filename,
+    });
   })
 }
 // 获取消息

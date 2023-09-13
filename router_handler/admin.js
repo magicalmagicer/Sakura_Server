@@ -9,7 +9,7 @@ const { SSL_OP_NO_TLSv1_1 } = require('constants')
 // 获取用户基本信息的处理函数
 exports.getUsersInfo = (req, res) => {
   if (req.query.query) {
-    var sql = `select id,nickname,username,power from user where username like '%${req.query.query}%' order by power desc ,id limit ?, ? `
+    var sql = `select id,nickname,username,power,email from user where username like '%${req.query.query}%' order by power desc ,id limit ?, ? `
     const start_index = req.query.pagenum * req.query.pagesize - req.query.pagesize
     var count_sql = `select count(*) from user where username like '%${req.query.query}%' order by power desc ,id`
     new Promise((resolve, reject) => {
@@ -34,10 +34,9 @@ exports.getUsersInfo = (req, res) => {
         res.cc(err)
       })
   } else {
-    var sql = `select id,nickname,username,power from user order by power desc,id limit ?, ? `
+    var sql = `select id,nickname,username,power,email from user order by power desc,id limit ?, ? `;
     const start_index = req.query.pagenum * req.query.pagesize - req.query.pagesize
     var count_sql = `select count(*) from user`
-    console.log(start_index, parseInt(req.query.pagesize))
     new Promise((resolve, reject) => {
       db.query(sql, [start_index, parseInt(req.query.pagesize)], (err, results) => {
         if (err) return reject(err)
@@ -187,7 +186,6 @@ exports.getUsersLoginInfo = (req, res) => {
 // 文章分类
 exports.editCategory = (req, res) => {
   let query = req.body
-  // console.log(query)
   if (query.operation == 'edit') {
     const sql = `update category set name=? where id=?`
     // 执行根据 id 查询用户的信息的 SQL 语句

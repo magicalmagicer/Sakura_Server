@@ -57,11 +57,9 @@ exports.updateUserInfo = (req, res) => {
     var userInfo = {
       nickname: req.body.nickname,
       // 文章封面的存放路径
-      avatar: 'http://127.0.0.1:3007/avatar/' + req.file.filename,
+      avatar: 'http://43.138.252.149:3007/avatar/' + req.file.filename,
     };
     if (req.body.oldavatar) {
-      console.log('存在老头像');
-      // console.log(11)
       fs.unlink(path.join(__dirname, '../avatar/', req.body.oldavatar), (err, results) => {
         if (err) res.cc(err);
         const sql = `update user set ? where username ='${req.body.username}'`;
@@ -71,7 +69,6 @@ exports.updateUserInfo = (req, res) => {
         });
       });
     } else {
-      console.log('首次上传头像');
       const sql = `update user set ? where username ='${req.body.username}'`;
       db.query(sql, userInfo, (err, results) => {
         if (err) return res.cc(err);
@@ -80,14 +77,13 @@ exports.updateUserInfo = (req, res) => {
     }
   } else {
     // 未上传新头像
-    console.log('未上传新头像');
     var userInfo = {
       nickname: req.body.nickname,
+      email: req.body.email,
     };
     const sql = `update user set ? where username ='${req.body.username}'`;
     db.query(sql, userInfo, (err, results) => {
       if (err) return res.cc(err);
-      console.log(results.affectedRows);
       if (results.affectedRows !== 1) return res.cc('修改用户信息失败！');
       return res.cc('修改用户信息成功！', 0);
     });
