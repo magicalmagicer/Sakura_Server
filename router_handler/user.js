@@ -102,12 +102,13 @@ exports.login = (req, res) => {
         };
         console.log(loginInfo);
         db.query(time_sql, loginInfo, (err, results) => {
-          console.log(results);
+          
           if (err) {
             console.log(err);
             console.log('插入登录信息失败！');
           }
         });
+        console.log(results);
         res.send({
           status: 0,
           message: '登录成功！',
@@ -116,6 +117,9 @@ exports.login = (req, res) => {
           id: results[0].id,
           nickname: results[0].nickname,
           power: results[0].power,
+          email: results[0].email,
+          avatar: results[0].avatar,
+          nickname: results[0].nickname,
         });
       })
       .catch((err) => {
