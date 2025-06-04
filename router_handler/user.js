@@ -56,7 +56,7 @@ exports.login = (req, res) => {
     // 获取登录城市
     let ip = req.connection.remoteAddress || req.socket.remoteAddress || '::ffff:127.0.0.1'
     let city = ''
-    console.log(ip)
+    // console.log(ip)
     ip = ip.split('ffff:')[1]
     axios
       .get(`https://restapi.amap.com/v3/ip?ip=${ip}&output=json&key=0b000d8c5439bb0c68baf852a91b6b04`)
@@ -64,8 +64,8 @@ exports.login = (req, res) => {
         const data = result.data
         if (data.info == 'OK' && (data.province.length > 0 || data.province.length > 0)) {
           city = data.province == data.city ? data.city : data.province + data.city
-          console.log(data.province, data.city)
-          console.log(city)
+          // console.log(data.province, data.city)
+          // console.log(city)
         }
         // TODO：通过compareSync判断密码是否正确
         const compareResult = bcrypt.compareSync(userinfo.password, results[0].password)
@@ -84,9 +84,9 @@ exports.login = (req, res) => {
           time: new Date(Date.now() + 8 * 60 * 60 * 1000),
           city: city
         }
-        console.log(loginInfo)
+        // console.log(loginInfo)
         db.query(time_sql, loginInfo, (err, results) => {
-          console.log(results)
+          // console.log(results)
           if (err) {
             console.log(err)
             console.log('插入登录信息失败！')

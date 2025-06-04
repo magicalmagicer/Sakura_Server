@@ -1,10 +1,10 @@
 const mysql = require('mysql')
 
 const db = mysql.createPool({
-  host: '127.0.0.1',
+  host: '110.41.42.88',
   user: 'root',
-  password: 'newpassword',
-  database: 'bili_blog',
+  password: 'newmysqlpwd',
+  database: 'sakura_database',
   timezone: '08:00'
 })
 

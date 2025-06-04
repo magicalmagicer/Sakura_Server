@@ -157,33 +157,42 @@ exports.getArticleDetail = (req, res) => {
 }
 
 // 搜索文章列表的处理函数（完成）
-exports.searchArticle = (req, res) => {
-  const start_index = req.query.curPage * req.query.pageSize - req.query.pageSize
-  const queryStr = '%' + req.query.key + '%'
-  //定义查询文章列表数据的 SQL 语句
-  const sql = `SELECT * FROM article where (title like '${queryStr}' or content like '${queryStr}') order by id desc limit ? , ?`
-  const count_sql = `select count(*) from article where (title like '${queryStr}' or content like '${queryStr}')`
-  new Promise((resolve, reject) => {
-    db.query(sql, [start_index, parseInt(req.query.pageSize)], (err, results) => {
-      if (err) return reject(err)
-      resolve(results)
-    })
-  })
-    .then((data) => {
-      db.query(count_sql, queryStr, (err, results) => {
-        if (err) return res.cc(err)
-        res.send({
-          status: 0,
-          message: '搜索文章列表成功！',
-          count: results[0]['count(*)'],
-          data: data
+exports.searchArticle = async (req, res) => {
+  try {
+    const start_index = req.query.curPage * req.query.pageSize - req.query.pageSize
+    const queryStr = '%' + req.query.key + '%'
+
+    // 定义查询文章列表数据的 SQL 语句
+    const sql = `SELECT * FROM article where (title like '${queryStr}' or content like '${queryStr}') order by id desc limit ? , ?`
+    const count_sql = `select count(*) from article where (title like '${queryStr}' or content like '${queryStr}')`
+
+    // 使用 promise 封装查询
+    const queryPromise = (sql, values) => {
+      return new Promise((resolve, reject) => {
+        db.query(sql, values, (err, results) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve(results)
+          }
         })
       })
+    }
+
+    // 执行查询
+    const data = await queryPromise(sql, [start_index, parseInt(req.query.pageSize)])
+    const countResults = await queryPromise(count_sql)
+
+    res.send({
+      status: 0,
+      message: '搜索文章列表成功测试！',
+      count: countResults[0]['count(*)'],
+      data: data
     })
-    .catch((err) => {
-      res.cc(err)
-    })
-}
+  } catch (err) {
+    res.cc(err)
+  }
+};
 
 // 文章点赞处理函数
 exports.likeArticle = (req, res) => {
